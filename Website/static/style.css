@@ -1,0 +1,7 @@
+body { background: #f8f9fa; }
+.navbar-brand { font-weight: 700; letter-spacing: 0.5px; }
+.card:hover { box-shadow: 0 6px 18px rgba(0,0,0,0.08); transform: translateY(-2px); transition: all .18s ease; }
+.footer { padding: 24px 0; margin-top: 40px; border-top: 1px solid #e9ecef; color: #6c757d; }
+.badge-cart { background:#ffc107; color:#212529; }
+.alert { margin-top: 1rem; }
+.text-truncate { max-width: 100%; }

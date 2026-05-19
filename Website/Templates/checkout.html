@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Checkout{% endblock %}
+{% block content %}
+<h3>Checkout</h3>
+<form method="POST">
+  <div class="form-group">
+    <label for="name">Full name</label>
+    <input type="text" name="name" id="name" class="form-control" required />
+  </div>
+  <div class="form-group">
+    <label for="card">Card number (mock)</label>
+    <input type="text" name="card" id="card" class="form-control" placeholder="4242 4242 4242 4242" required />
+  </div>
+  <div class="form-row">
+    <div class="form-group col-md-6">
+      <label for="exp">Expiry</label>
+      <input type="text" id="exp" name="exp" class="form-control" placeholder="MM/YY" required />
+    </div>
+    <div class="form-group col-md-6">
+      <label for="cvv">CVV</label>
+      <input type="text" id="cvv" name="cvv" class="form-control" required />
+    </div>
+  </div>
+  <button class="btn btn-success">Pay now</button>
+</form>
+{% endblock %}
