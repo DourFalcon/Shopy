@@ -70,15 +70,34 @@ def product_page(product_id):
 
 @views.route('/add-to-cart', methods=['POST'])
 def add_to_cart():
-    data = request.form or request.json or {}
+    # Support both form POST (regular browser submit) and AJAX/JSON
+    data = {}
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+
     product_id = data.get('product_id')
-    qty = int(data.get('quantity', 1))
+    try:
+        qty = int(data.get('quantity', 1))
+    except Exception:
+        qty = 1
+
     if not product_id:
-        return jsonify({'error': 'missing product_id'}), 400
+        if request.is_json:
+            return jsonify({'error': 'missing product_id'}), 400
+        flash('No product specified to add.', category='error')
+        return redirect(url_for('views.shop'))
+
     cart = session.get('cart', {})
     cart[str(product_id)] = cart.get(str(product_id), 0) + max(1, qty)
     session['cart'] = cart
-    return jsonify({'success': True, 'cart': cart})
+
+    # Return JSON for AJAX, otherwise redirect back to shop
+    if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'success': True, 'cart': cart})
+    flash('Added to cart', category='success')
+    return redirect(url_for('views.shop'))
 
 
 @views.route('/cart')
@@ -115,3 +134,45 @@ def checkout():
         return redirect(url_for('views.shop'))
     # show checkout form
     return render_template('checkout.html')
+
+
+@views.route('/cart/remove', methods=['POST'])
+def remove_from_cart():
+    # Support both form POST and JSON/AJAX removal
+    product_id = None
+    if request.is_json:
+        data = request.get_json()
+        product_id = data.get('product_id')
+    else:
+        product_id = request.form.get('product_id')
+
+    if not product_id:
+        if request.is_json:
+            return jsonify({'success': False, 'error': 'missing product_id'}), 400
+        flash('No product specified to remove.', category='error')
+        return redirect(url_for('views.cart'))
+
+    cart = session.get('cart', {})
+    removed = False
+    if str(product_id) in cart:
+        cart.pop(str(product_id), None)
+        session['cart'] = cart
+        removed = True
+
+    # Recompute total for response
+    total = 0.0
+    for pid, qty in session.get('cart', {}).items():
+        prod = Product.query.get(int(pid))
+        if prod:
+            total += prod.price * qty
+
+    cart_count = sum(session.get('cart', {}).values()) if isinstance(session.get('cart', {}), dict) else 0
+
+    if request.is_json:
+        return jsonify({'success': removed, 'cart_count': cart_count, 'total': total})
+
+    if removed:
+        flash('Item removed from cart.', category='success')
+    else:
+        flash('Item not found in cart.', category='error')
+    return redirect(url_for('views.cart'))

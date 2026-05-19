@@ -9,23 +9,72 @@
       <th>Product</th>
       <th>Qty</th>
       <th>Subtotal</th>
+      <th></th>
     </tr>
   </thead>
   <tbody>
     {% for it in items %}
-    <tr>
+    <tr data-product-id="{{ it.product.id }}" data-subtotal="{{ it.subtotal }}">
       <td>{{ it.product.name }}</td>
       <td>{{ it.qty }}</td>
-      <td>${{ '%.2f'|format(it.subtotal) }}</td>
+      <td class="subtotal-cell">{{ it.subtotal|inr }}</td>
+      <td>
+        <form method="POST" action="{{ url_for('views.remove_from_cart') }}" class="remove-form d-inline">
+          <input type="hidden" name="product_id" value="{{ it.product.id }}" />
+          <button type="submit" class="btn btn-sm btn-outline-danger remove-btn">Remove</button>
+        </form>
+      </td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
-<p class="text-right"><strong>Total: ${{ '%.2f'|format(total) }}</strong></p>
+<p class="text-right"><strong>Total: {{ total|inr }}</strong></p>
 <div class="text-right">
   <a href="{{ url_for('views.checkout') }}" class="btn btn-primary">Proceed to checkout</a>
 </div>
 {% else %}
 <p>Your cart is empty. <a href="{{ url_for('views.shop') }}">Continue shopping</a></p>
 {% endif %}
+{% endblock %}
+
+{% block javascript %}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const removeForms = document.querySelectorAll('.remove-form');
+  removeForms.forEach(form => {
+    form.addEventListener('submit', async function(e){
+      e.preventDefault();
+      const btn = form.querySelector('.remove-btn');
+      btn.disabled = true;
+      const productId = form.querySelector('input[name="product_id"]').value;
+      try{
+        const res = await fetch(form.action, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          body: JSON.stringify({ product_id: productId })
+        });
+        const data = await res.json();
+        if(data.success){
+          // remove row from DOM
+          const row = document.querySelector(`tr[data-product-id="${productId}"]`);
+          if(row) row.remove();
+          // update total
+          const totalEl = document.querySelector('.text-right strong');
+          if(totalEl) totalEl.textContent = 'Total: ' + (data.total === undefined ? '' : (data.total.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}))).replace(/^/, '');
+          // update cart badge
+          const badge = document.querySelector('.badge-cart');
+          if(badge) badge.textContent = data.cart_count || 0;
+        } else {
+          alert(data.error || 'Could not remove item');
+        }
+      }catch(err){
+        console.error(err);
+        alert('Error removing item');
+      }finally{
+        btn.disabled = false;
+      }
+    });
+  });
+});
+</script>
 {% endblock %}
