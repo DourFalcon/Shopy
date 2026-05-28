@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function(){
           if(row) row.remove();
           // update total
           const totalEl = document.querySelector('.text-right strong');
-          if(totalEl) totalEl.textContent = 'Total: ' + (data.total === undefined ? '' : (data.total.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}))).replace(/^/, '');
+          if(totalEl) totalEl.textContent = 'Total: ' + (data.total === undefined ? '' : (data.total.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})));
           // update cart badge
           const badge = document.querySelector('.badge-cart');
           if(badge) badge.textContent = data.cart_count || 0;
