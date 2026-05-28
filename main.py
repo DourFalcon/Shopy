@@ -10,6 +10,8 @@ if __name__ == '__main__':
     import threading
     import os
 
+    debug_mode = os.environ.get('FLASK_DEBUG', '').lower() in ('1', 'true', 'yes', 'on')
+
     def _open_browser():
         import tempfile, time
         lock_path = os.path.join(tempfile.gettempdir(), 'shopy_browser_opened')
@@ -28,7 +30,7 @@ if __name__ == '__main__':
 
     # Start the opener only in the reloader child (WERKZEUG_RUN_MAIN == 'true')
     # or when not running in debug mode.
-    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or not app.debug:
+    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or not debug_mode:
         threading.Timer(1.0, _open_browser).start()
 
-    app.run(debug=True)
+    app.run(debug=debug_mode)
